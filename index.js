@@ -86,11 +86,15 @@ function commentToString(comment /*: CommentMessage */) /*: string */ {
   return comment.descr;
 }
 
-module.exports = function flowJUnitTransformer(input /*: FlowReport */) {
+module.exports = function flowJUnitTransformer(input /*: FlowReport */, args /*: string[] */) {
+  const pkgArg = args.filter(a => a.startsWith("--package-name="));
+  const pkg = pkgArg ? pkgArg[0].substring(15) : "org.flow";
+
   const errors = input.errors.map(error => {
     const context = error.message[0].context;
     const title = error.message.map(message => message.descr).join(' ');
     const message = errorToString(error);
+    const classname = error.message[0].path;
     const hash = crypto
       .createHash('sha256')
       .update(message)
@@ -99,9 +103,9 @@ module.exports = function flowJUnitTransformer(input /*: FlowReport */) {
     return `
     <testcase
       time="0"
-      classname="org.flow.${error.level.toLowerCase()}.${hash}"
+      classname="${classname}"
       id="flow-error"
-      name="org.flow.${error.level.toLowerCase()}.${hash}"
+      name="${classname}.${hash}"
       >
         <failure
           type="${error.level.toUpperCase()}"
@@ -117,7 +121,7 @@ ${message}
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites id="flow">
   <testsuite
-    package="org.flow"
+    package="${pkg}"
     tests="${errors.length}"
     time="0"
     skipped="0"

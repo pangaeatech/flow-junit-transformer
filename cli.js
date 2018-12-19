@@ -14,7 +14,7 @@ process.stdin.on('readable', () => {
 
 process.stdin.on('end', () => {
   const parsed = JSON.parse(input);
-  const write = process.stdout.write(transformer(parsed));
+  const write = process.stdout.write(transformer(parsed, process.argv));
 
   if (!write) {
     throw new Error('Could not write to stdout!');
